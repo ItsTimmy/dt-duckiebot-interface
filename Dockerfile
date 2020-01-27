@@ -30,6 +30,16 @@ RUN apt-get update \
 COPY ./dependencies-py.txt "${REPO_PATH}/"
 RUN pip install -r ${REPO_PATH}/dependencies-py.txt
 
+#added pigpio library setup here
+WORKDIR /home/software/pigpio
+RUN wget abyz.me.uk/rpi/pigpio/pigpio.tar \
+    && tar xf pigpio.tar \
+    && cd PIGPIO \
+    && make \
+    && make install
+
+WORKDIR "${REPO_PATH}"
+
 # copy the source code
 COPY . "${REPO_PATH}/"
 

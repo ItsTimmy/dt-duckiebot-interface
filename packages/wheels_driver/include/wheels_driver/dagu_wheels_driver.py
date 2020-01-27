@@ -1,8 +1,13 @@
 #!/usr/bin/python
 
 from Adafruit_MotorHAT import Adafruit_MotorHAT
+import pigpio
 from math import fabs, floor
 from time import sleep
+
+
+BIN1_PIN = 6
+BIN2_PIN = 13
 
 
 class DaguWheelsDriver:
@@ -31,6 +36,10 @@ class DaguWheelsDriver:
         self.leftMotor = self.motorhat.getMotor(1)
         self.rightMotor = self.motorhat.getMotor(2)
         self.debug = debug
+
+        self.pi = pigpio.pi()  # Initialise Pi connection, RFMH_2019_03_21
+        self.pi.set_mode(BIN1_PIN, pigpio.OUTPUT)
+        self.pi.set_mode(BIN2_PIN, pigpio.OUTPUT)
 
         self.leftSpeed = 0.0
         self.rightSpeed = 0.0
@@ -67,7 +76,7 @@ class DaguWheelsDriver:
                              self.RIGHT_MOTOR_MAX_PWM)
 
         if self.debug:
-            print ("v = %5.3f, u = %5.3f, vl = %5.3f, vr = %5.3f, pwml = %3d, pwmr = %3d" % (v, u, vl, vr, pwml, pwmr))
+            print ("v = %5.3f, u = %5.3f, vl = %5.3f, vr = %5.3f, pwml = %3d, pwmrautobot02 = %3d" % (v, u, vl, vr, pwml, pwmr))
 
         if fabs(vl) < self.SPEED_TOLERANCE:
             leftMotorMode = Adafruit_MotorHAT.RELEASE
@@ -79,11 +88,17 @@ class DaguWheelsDriver:
 
         if fabs(vr) < self.SPEED_TOLERANCE:
             rightMotorMode = Adafruit_MotorHAT.RELEASE
+            self.pi.write(BIN1_PIN, 0)
+            self.pi.write(BIN2_PIN, 0)
             pwmr = 0
         elif vr > 0:
             rightMotorMode = Adafruit_MotorHAT.FORWARD
+            self.pi.write(BIN1_PIN, 1)
+            self.pi.write(BIN2_PIN, 0)
         elif vr < 0:
             rightMotorMode = Adafruit_MotorHAT.BACKWARD
+            self.pi.write(BIN1_PIN, 0)
+            self.pi.write(BIN2_PIN, 1)
 
         self.leftMotor.setSpeed(pwml)
         self.leftMotor.run(leftMotorMode)
